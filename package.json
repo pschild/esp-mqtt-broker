@@ -1,0 +1,22 @@
+{
+  "name": "esp-mqtt-broker",
+  "version": "1.0.0",
+  "description": "MQTT Broker using aedes",
+  "main": "index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prestart": "npm run compile",
+    "start": "node dist",
+    "test": "echo \"no test specified\" && exit 0"
+  },
+  "author": "Philippe Schild",
+  "license": "MIT",
+  "dependencies": {
+    "aedes": "^0.41.0"
+  },
+  "devDependencies": {
+    "@types/node": "^12.12.11",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.2"
+  }
+}
