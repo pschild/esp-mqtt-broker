@@ -3,7 +3,7 @@ import { createServer } from 'net';
 import * as aedesFn from 'aedes';
 import { PublishPacket } from 'aedes';
 
-const mongoUri = `mongodb://192.168.178.28:27017/mydb`;
+const mongoUri = `mongodb://192.168.178.28:27017/`;
 
 const aedes = aedesFn();
 const port = 1883;
@@ -38,7 +38,9 @@ aedes.on('publish', async (packet, client) => {
       throw error;
     }
 
-    const collection = database.collection(`mycoll`);
+    const db = database.db('mydb');
+
+    const collection = db.collection(`mycoll`);
     collection.createIndex({ topic: 1 });
 
     const messageObject = {
@@ -46,7 +48,7 @@ aedes.on('publish', async (packet, client) => {
       message: packet.payload.toString()
     };
 
-    collection.insert(messageObject, (error, result) => {
+    collection.insertOne(messageObject, (error, result) => {
       if (error != null) {
         console.log('ERROR inserting to mongoDb: ' + error);
       } else {
