@@ -1,22 +1,21 @@
-const aedesPersistenceMongoDB = require('aedes-persistence-mongodb');
+const mongodb = require('mongodb');
 import { createServer } from 'net';
 import * as aedesFn from 'aedes';
 import { PublishPacket } from 'aedes';
 
-const persistence = aedesPersistenceMongoDB({
-  url: `mongodb://localhost:27017/mqttlog`
-});
-const aedes = aedesFn({ persistence });
+const mongoUri = `mongodb://192.168.178.28:27017/mydb`;
+
+const aedes = aedesFn();
 const port = 1883;
 
 aedes.on('subscribe', (subscriptions, client) => {
   console.log('MQTT client \x1b[32m' + (client ? client.id : client) +
-          '\x1b[0m subscribed to topics: ' + subscriptions.map(s => s.topic).join('\n'), 'from broker', aedes.id);
+    '\x1b[0m subscribed to topics: ' + subscriptions.map(s => s.topic).join('\n'), 'from broker', aedes.id);
 });
 
 aedes.on('unsubscribe', (subscriptions, client) => {
   console.log('MQTT client \x1b[32m' + (client ? client.id : client) +
-          '\x1b[0m unsubscribed to topics: ' + subscriptions.join('\n'), 'from broker', aedes.id);
+    '\x1b[0m unsubscribed to topics: ' + subscriptions.join('\n'), 'from broker', aedes.id);
 });
 
 // fired when a client connects
@@ -33,6 +32,28 @@ aedes.on('clientDisconnect', (client) => {
 aedes.on('publish', async (packet, client) => {
   // tslint:disable-next-line:max-line-length
   console.log('Client \x1b[31m' + (client ? client.id : 'BROKER_' + aedes.id) + '\x1b[0m has published', packet.payload.toString(), 'on', packet.topic, 'to broker', aedes.id);
+
+  mongodb.MongoClient.connect(mongoUri, (error, database) => {
+    if (error != null) {
+      throw error;
+    }
+
+    const collection = database.collection(`mycoll`);
+    collection.createIndex({ topic: 1 });
+
+    const messageObject = {
+      topic: packet.topic,
+      message: packet.payload.toString()
+    };
+
+    collection.insert(messageObject, (error, result) => {
+      if (error != null) {
+        console.log('ERROR inserting to mongoDb: ' + error);
+      } else {
+        console.log('SUCCESS inserting to mongoDb: ' + result);
+      }
+    });
+  });
 });
 
 const server = createServer(aedes.handle);

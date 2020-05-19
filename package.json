@@ -13,7 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "aedes": "^0.41.0",
-    "aedes-persistence-mongodb": "^8.0.1"
+    "mongodb": "^3.5.7"
   },
   "devDependencies": {
     "@types/node": "^12.12.11",
