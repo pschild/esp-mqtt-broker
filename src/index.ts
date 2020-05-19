@@ -4,7 +4,7 @@ import * as aedesFn from 'aedes';
 import { PublishPacket } from 'aedes';
 
 const persistence = aedesPersistenceMongoDB({
-  url: `mongodb://localhost:27017/mqttlog`
+  url: `mongodb://192.168.178.28:27017/mqttlog`
 });
 const aedes = aedesFn({ persistence });
 const port = 1883;
