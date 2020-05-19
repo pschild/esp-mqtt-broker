@@ -1,33 +1,50 @@
-const aedes = require('aedes')();
-const server = require('net').createServer(aedes.handle);
+const aedesPersistenceMongoDB = require('aedes-persistence-mongodb');
+import { createServer } from 'net';
+import * as aedesFn from 'aedes';
+import { PublishPacket } from 'aedes';
+
+const persistence = aedesPersistenceMongoDB({
+  url: `mongodb://localhost:27017/mqttlog`
+});
+const aedes = aedesFn({ persistence });
 const port = 1883;
 
-aedes.on('subscribe', function (subscriptions, client) {
+aedes.on('subscribe', (subscriptions, client) => {
   console.log('MQTT client \x1b[32m' + (client ? client.id : client) +
           '\x1b[0m subscribed to topics: ' + subscriptions.map(s => s.topic).join('\n'), 'from broker', aedes.id);
 });
 
-aedes.on('unsubscribe', function (subscriptions, client) {
+aedes.on('unsubscribe', (subscriptions, client) => {
   console.log('MQTT client \x1b[32m' + (client ? client.id : client) +
           '\x1b[0m unsubscribed to topics: ' + subscriptions.join('\n'), 'from broker', aedes.id);
 });
 
 // fired when a client connects
-aedes.on('client', function (client) {
+aedes.on('client', (client) => {
   console.log('Client Connected: \x1b[33m' + (client ? client.id : client) + '\x1b[0m', 'to broker', aedes.id);
 });
 
 // fired when a client disconnects
-aedes.on('clientDisconnect', function (client) {
+aedes.on('clientDisconnect', (client) => {
   console.log('Client Disconnected: \x1b[31m' + (client ? client.id : client) + '\x1b[0m', 'to broker', aedes.id);
 });
 
 // fired when a message is published
-aedes.on('publish', async function (packet, client) {
+aedes.on('publish', async (packet, client) => {
+  // tslint:disable-next-line:max-line-length
   console.log('Client \x1b[31m' + (client ? client.id : 'BROKER_' + aedes.id) + '\x1b[0m has published', packet.payload.toString(), 'on', packet.topic, 'to broker', aedes.id);
 });
 
+const server = createServer(aedes.handle);
 server.listen(port, () => {
   console.log('Aedes listening on port:', port);
-  aedes.publish({ topic: 'aedes/hello', payload: "I'm broker " + aedes.id });
+  const packet: PublishPacket = {
+    cmd: `publish`,
+    qos: 2,
+    topic: `aedes/hello`,
+    payload: Buffer.from(`I am broker # ${aedes.id}`),
+    retain: false,
+    dup: true
+  };
+  aedes.publish(packet, (err) => console.log(err));
 });

@@ -12,7 +12,8 @@
   "author": "Philippe Schild",
   "license": "MIT",
   "dependencies": {
-    "aedes": "^0.41.0"
+    "aedes": "^0.41.0",
+    "aedes-persistence-mongodb": "^8.0.1"
   },
   "devDependencies": {
     "@types/node": "^12.12.11",
