@@ -45,14 +45,13 @@ aedes.on('publish', async (packet, client) => {
 
     const messageObject = {
       topic: packet.topic,
+      datetime: new Date(),
       message: packet.payload.toString()
     };
 
     collection.insertOne(messageObject, (error, result) => {
       if (error != null) {
         console.log('ERROR inserting to mongoDb: ' + error);
-      } else {
-        console.log('SUCCESS inserting to mongoDb: ' + result);
       }
     });
   });
