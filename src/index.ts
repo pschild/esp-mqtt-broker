@@ -32,29 +32,31 @@ aedes.on('clientDisconnect', (client) => {
 aedes.on('publish', async (packet, client) => {
   // tslint:disable-next-line:max-line-length
   console.log('Client \x1b[31m' + (client ? client.id : 'BROKER_' + aedes.id) + '\x1b[0m has published', packet.payload.toString(), 'on', packet.topic, 'to broker', aedes.id);
-
-  mongodb.MongoClient.connect(mongoUri, (error, database) => {
-    if (error != null) {
-      throw error;
-    }
-
-    const db = database.db('mydb');
-
-    const collection = db.collection(`mycoll`);
-    collection.createIndex({ topic: 1 });
-
-    const messageObject = {
-      topic: packet.topic,
-      datetime: new Date(),
-      message: packet.payload.toString()
-    };
-
-    collection.insertOne(messageObject, (error, result) => {
+  
+  if (packet.topic.search(/heartbeat/) < 0) {
+    mongodb.MongoClient.connect(mongoUri, (error, database) => {
       if (error != null) {
-        console.log('ERROR inserting to mongoDb: ' + error);
+        throw error;
       }
+
+      const db = database.db('mydb');
+
+      const collection = db.collection(`mycoll`);
+      collection.createIndex({ topic: 1 });
+
+      const messageObject = {
+        topic: packet.topic,
+        datetime: new Date(),
+        message: packet.payload.toString()
+      };
+
+      collection.insertOne(messageObject, (error, result) => {
+        if (error != null) {
+          console.log('ERROR inserting to mongoDb: ' + error);
+        }
+      });
     });
-  });
+  }
 });
 
 const server = createServer(aedes.handle);
