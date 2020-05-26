@@ -31,7 +31,7 @@ aedes.on('clientDisconnect', (client) => {
 // fired when a message is published
 aedes.on('publish', async (packet, client) => {
   // tslint:disable-next-line:max-line-length
-  console.log('Client \x1b[31m' + (client ? client.id : 'BROKER_' + aedes.id) + '\x1b[0m has published', packet.payload.toString(), 'on', packet.topic, 'to broker', aedes.id);
+  console.log(new Date().toISOString() + ': Client \x1b[31m' + (client ? client.id : 'BROKER_' + aedes.id) + '\x1b[0m has published', packet.payload.toString(), 'on', packet.topic, 'to broker', aedes.id);
   
   if (packet.topic.search(/heartbeat/) < 0) {
     mongodb.MongoClient.connect(mongoUri, (error, database) => {
