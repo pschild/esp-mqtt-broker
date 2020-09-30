@@ -75,5 +75,5 @@ server.listen(port, () => {
     retain: false,
     dup: true
   };
-  aedes.publish(packet, (err) => log(err.message));
+  aedes.publish(packet, (err) => console.log(err));
 });
