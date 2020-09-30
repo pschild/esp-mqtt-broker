@@ -1,39 +1,44 @@
-const mongodb = require('mongodb');
+// const mongodb = require('mongodb');
 import { createServer } from 'net';
 import * as aedesFn from 'aedes';
 import { PublishPacket } from 'aedes';
+import { format } from 'date-fns';
 
-const mongoUri = `mongodb://192.168.178.28:27017/`;
+// const mongoUri = `mongodb://192.168.178.28:27017/`;
 
 const aedes = aedesFn();
 const port = 1883;
 
+function log(logMessage: string) {
+  console.log(`${format(new Date(), 'dd.MM.yyyy HH:mm:ss.SSS')}: ${logMessage}`);
+}
+
 aedes.on('subscribe', (subscriptions, client) => {
-  console.log('MQTT client \x1b[32m' + (client ? client.id : client) +
-    '\x1b[0m subscribed to topics: ' + subscriptions.map(s => s.topic).join('\n'), 'from broker', aedes.id);
+  // tslint:disable-next-line:max-line-length
+  log(`MQTT client \x1b[32m${client ? client.id : client}\x1b[0m subscribed to topics: ${subscriptions.map(s => s.topic).join(',')} from broker ${aedes.id}`);
 });
 
 aedes.on('unsubscribe', (subscriptions, client) => {
-  console.log('MQTT client \x1b[32m' + (client ? client.id : client) +
-    '\x1b[0m unsubscribed to topics: ' + subscriptions.join('\n'), 'from broker', aedes.id);
+  // tslint:disable-next-line:max-line-length
+  log(`MQTT client \x1b[32m${client ? client.id : client}\x1b[0m unsubscribed to topics: ${subscriptions.join(',')} from broker ${aedes.id}`);
 });
 
 // fired when a client connects
 aedes.on('client', (client) => {
-  console.log('Client Connected: \x1b[33m' + (client ? client.id : client) + '\x1b[0m', 'to broker', aedes.id);
+  log(`Client Connected: \x1b[33m${client ? client.id : client}\x1b[0m to broker ${aedes.id}`);
 });
 
 // fired when a client disconnects
 aedes.on('clientDisconnect', (client) => {
-  console.log('Client Disconnected: \x1b[31m' + (client ? client.id : client) + '\x1b[0m', 'to broker', aedes.id);
+  log(`Client Disconnected: \x1b[31m${client ? client.id : client}\x1b[0m to broker ${aedes.id}`);
 });
 
 // fired when a message is published
 aedes.on('publish', async (packet, client) => {
   // tslint:disable-next-line:max-line-length
-  console.log(new Date().toISOString() + ': Client \x1b[31m' + (client ? client.id : 'BROKER_' + aedes.id) + '\x1b[0m has published', packet.payload.toString(), 'on', packet.topic, 'to broker', aedes.id);
-  
-  if (packet.topic.search(/heartbeat/) < 0) {
+  log(`Client \x1b[31m${client ? client.id : 'BROKER_' + aedes.id}\x1b[0m has published ${packet.payload.toString()} on ${packet.topic} to broker ${aedes.id}`);
+
+  /*if (packet.topic.search(/heartbeat/) < 0) {
     mongodb.MongoClient.connect(mongoUri, (error, database) => {
       if (error != null) {
         throw error;
@@ -56,7 +61,7 @@ aedes.on('publish', async (packet, client) => {
         }
       });
     });
-  }
+  }*/
 });
 
 const server = createServer(aedes.handle);
@@ -70,5 +75,5 @@ server.listen(port, () => {
     retain: false,
     dup: true
   };
-  aedes.publish(packet, (err) => console.log(err));
+  aedes.publish(packet, (err) => log(err.message));
 });
